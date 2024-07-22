@@ -12,4 +12,5 @@ tiktoken==0.7.0  # For embeddings
 PyPDF2==3.0.1  # For working with PDFs
 Streamlit==1.30.0
 google-generativeai
+langchain-google==0.0.1
 # install markdown depenendies with: `pip install "unstructured[md]"` after install the requirements file. Leave this line commented out. 
