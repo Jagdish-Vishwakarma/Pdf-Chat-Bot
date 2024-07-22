@@ -93,11 +93,11 @@ def user_input(question):
 
 # Main app portion of the project
 def app():
-  st.title("Public Company Financial Documents Analyzer")
+  st.title("ASTM Documents Analyzer")
   st.sidebar.title("Upload Documents")
 
   # Sidebar
-  pdf_docs = st.sidebar.file_uploader("Upload your financial documents in PDF format, then click Analyze.", accept_multiple_files=True)
+  pdf_docs = st.sidebar.file_uploader("Upload your documents in PDF format, then click Analyze.", accept_multiple_files=True)
 
   analyze_triggered = st.sidebar.button("Analyze")
 
@@ -110,7 +110,7 @@ def app():
 
 
   # User Input 
-  user_question = st.text_input("Ask a question based on the shareholder letters that were uploaded")
+  user_question = st.text_input("Ask a question based on the documents that were uploaded")
 
   if user_question:
     user_input(user_question)
