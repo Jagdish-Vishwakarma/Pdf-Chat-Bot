@@ -4,22 +4,32 @@
 
 
 
-import os
-import streamlit as st
-import google.generativeai as genai
+# import os
+# import streamlit as st
+# import google.generativeai as genai
 
+# from langchain.embeddings import OpenAIEmbeddings
+# from langchain.chains import RetrievalQAWithSourcesChain
+# from langchain.text_splitter import RecursiveCharacterTextSplitter
+# from langchain_community.vectorstores import FAISS
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+# from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain.chains.question_answering import load_qa_chain
+# from langchain.prompts import PromptTemplate
+# from PyPDF2 import PdfReader
+# from dotenv import load_dotenv
+
+import os
+from dotenv import load_dotenv
+import streamlit as st
+from PyPDF2 import PdfReader
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
+from google_generativeai import Chat, GoogleGenerativeAIEmbeddings  # Correct import
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
-from PyPDF2 import PdfReader
-from dotenv import load_dotenv
-
-
 # In[35]:
 
 
