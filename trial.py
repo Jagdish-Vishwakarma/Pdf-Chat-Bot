@@ -43,18 +43,17 @@ def generate_chunks(text):
   return chunks 
 
 # Convert Chunks into Vectors
+# Convert Chunks into Vectors
 def chunks_to_vectors(chunks):
-  # embeddings = OpenAIEmbeddings()
-
-  embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-  print(embeddings)
-  try:
-      vector_store = FAISS.from_texts(chunks, embeddings)
-  except Exception as e:
-      print("Error in from_texts:", e)
-      raise
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    try:
+        vector_store = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+        vector_store.save_local("faiss_index")  # Save the updated index
+    except Exception as e:
+        print("Error in loading FAISS index:", e)
+        raise
   # vector_store = FAISS.from_texts(chunks, embeddings)
-  vector_store.save_local("faiss_index")
+   #vector_store.save_local("faiss_index")
 
 
 def get_conversation():
@@ -75,21 +74,18 @@ def get_conversation():
   return chain 
 
 def user_input(question):
-  # embeddings = OpenAIEmbeddings()
-  embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
-  # Load embeddings from local file
-  new_db = FAISS.load_local("faiss_index", embeddings)
-  docs = new_db.similarity_search(question)
+    new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+    docs = new_db.similarity_search(question)
 
-  chain = get_conversation()
+    chain = get_conversation()
 
-  response = chain(
-    {"input_documents": docs, "question": question}, return_only_outputs=True
-  )
+    response = chain(
+        {"input_documents": docs, "question": question}, return_only_outputs=True
+    )
 
-  st.write("Reply: ", response["output_text"])
-
+    st.write("Reply: ", response["output_text"])
 
 # Main app portion of the project
 def app():
