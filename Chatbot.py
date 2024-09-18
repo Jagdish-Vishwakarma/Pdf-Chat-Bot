@@ -139,7 +139,15 @@ def app():
 
     if analyze_triggered:
         with st.spinner("Configuring... ⏳"):
+            # Get the extracted text from the PDF
             raw_text = get_pdf_text(pdf_docs)
+
+            # Check if the extracted text is None or empty
+            if raw_text is None or raw_text.strip() == "":
+                st.error("No text extracted from the PDF. Please check the file.")
+                return
+
+            # Proceed with chunking and embedding only if the text is valid
             chunks = generate_chunks(raw_text)
             chunks_to_vectors(chunks)
             st.success("Done")
