@@ -17,8 +17,8 @@ tiktoken==0.7.0  # For embeddings
 PyPDF2==3.0.1  # PDF reader
 google-generativeai>=0.7.0,<0.8.0  # Update to meet langchain-google-genai requirements
 langchain-google-genai>=1.0.7,<2.0.0  # Allow flexibility within this version range
-streamlit==1.25.0
-pillow==9.4.0 
+streamlit==1.27.0  # Updated streamlit version to 1.27.0
+pillow==10.0.0  # You can now use pillow 10.0.0
 faiss-cpu
 
 
