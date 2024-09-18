@@ -5,6 +5,7 @@
 
 
 import os
+import time
 import streamlit as st
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
@@ -71,11 +72,16 @@ def generate_chunks(text):
 def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
-    # Throttle embedding requests to avoid exceeding rate limits
-    vector_store = []
-    for chunk in chunks:
-        vector_store.append(FAISS.from_texts([chunk], embeddings))
-        time.sleep(1)  # Adjust sleep time to manage rate limiting
+    # Create FAISS index in memory with throttling
+    vector_store = FAISS.from_texts([], embeddings)
+    
+    for i, chunk in enumerate(chunks):
+        # Embed each chunk and add it to the FAISS index
+        vector_store.add_texts([chunk])
+        
+        # Sleep to avoid exceeding rate limits
+        if (i + 1) % 10 == 0:  # Add delay every 10 requests
+            time.sleep(10)  # Adjust based on your API limits
     
     return vector_store
 
