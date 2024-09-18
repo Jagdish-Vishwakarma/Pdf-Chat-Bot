@@ -1,10 +1,10 @@
-streamlit
-google-generativeai
-python-dotenv
-langchain
-PyPDF2
-faiss-cpu
-langchain_google_genai
+# streamlit
+# google-generativeai
+# python-dotenv
+# langchain
+# PyPDF2
+# faiss-cpu
+# langchain_google_genai
 
 python-dotenv==1.0.1  # For reading environment variables stored in .env file
 langchain==0.2.2
