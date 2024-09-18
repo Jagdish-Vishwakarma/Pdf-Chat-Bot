@@ -73,7 +73,7 @@ def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
     # Create FAISS index in memory with throttling
-    vector_store = FAISS.from_texts([], embeddings)
+    vector_store = FAISS.from_texts(chunks, embeddings)  # Pass `chunks` instead of empty list
     
     for i, chunk in enumerate(chunks):
         # Embed each chunk and add it to the FAISS index
@@ -84,6 +84,7 @@ def chunks_to_vectors(chunks):
             time.sleep(10)  # Adjust based on your API limits
     
     return vector_store
+
 
 
 def get_conversation():
