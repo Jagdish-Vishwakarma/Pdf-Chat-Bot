@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# In[1]:
+
+
 import os
 import streamlit as st
 from PyPDF2 import PdfReader
@@ -12,6 +15,9 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
+
+
+# In[2]:
 
 
 import os
@@ -30,7 +36,7 @@ from PyPDF2 import PdfReader
 from dotenv import load_dotenv
 
 
-# In[35]:
+# In[5]:
 
 
 load_dotenv()
@@ -70,14 +76,15 @@ def chunks_to_vectors(chunks):
     except Exception as e:
         print("Error in loading FAISS index:", e)
         raise
-  # vector_store = FAISS.from_texts(chunks, embeddings)
-   #vector_store.save_local("faiss_index")
+    vector_store = FAISS.from_texts(chunks, embeddings)
+    vector_store.save_local("faiss_index")
 
 
 def get_conversation():
     prompt_template = """
     Answer the question that is asked with as much detail as you can, given the context that has been provided. If you unable to come up with an answer based on the provided context,
-    simply say "Answer cannot be provided based on the context that has been provided", instead of trying to forcibly provide an answer.\n\n
+    simply say "Answer cannot be provided based on the context that has been provided", instead of trying to forcibly provide an answer.
+    All the files uploaded are directly or indirectly related to Additive Manufacturing and 3d Printing industry and companies.\n\n
     Context: \n {context}?\n
     Question: \n {question}\n
     Answer:
@@ -108,23 +115,23 @@ def user_input(question):
 # Main app portion of the project
 # Main app portion of the project
 def app():
-    st.title("Documents Analyzer")
+    st.title("ASTM Documents Chatbot")
     st.sidebar.title("Upload Documents")
 
     # Sidebar
-    pdf_docs = st.sidebar.file_uploader("Upload your documents in PDF format, then click Analyze.", accept_multiple_files=True)
+    pdf_docs = st.sidebar.file_uploader("Upload your documents in PDF format, then click on Chat Now.", accept_multiple_files=True)
 
-    analyze_triggered = st.sidebar.button("Analyze")
+    analyze_triggered = st.sidebar.button("Chat Now")
 
     if analyze_triggered:
-        with st.spinner("Analyzing... ⏳"):
+        with st.spinner("Configuring... ⏳"):
             raw_text = get_pdf_text(pdf_docs)
             chunks = generate_chunks(raw_text)
             chunks_to_vectors(chunks)
             st.success("Done")
 
     # User Input 
-    user_question = st.text_input("Ask a question based on the shareholder letters that were uploaded")
+    user_question = st.text_input("Ask a question based on the documents that were uploaded")
 
     if user_question:
         user_input(user_question)
