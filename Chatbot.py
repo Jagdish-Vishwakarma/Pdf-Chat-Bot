@@ -72,16 +72,19 @@ def generate_chunks(text):
 def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
-    # Create FAISS index in memory with throttling
-    vector_store = FAISS.from_texts(chunks, embeddings)  # Pass `chunks` instead of empty list
+    # Initialize an empty FAISS index
+    vector_store = FAISS.from_texts([], embeddings)
     
-    for i, chunk in enumerate(chunks):
-        # Embed each chunk and add it to the FAISS index
-        vector_store.add_texts([chunk])
+    # Process chunks in batches to avoid exceeding rate limits
+    batch_size = 10  # Adjust based on your API's rate limit
+    for i in range(0, len(chunks), batch_size):
+        chunk_batch = chunks[i:i+batch_size]
         
-        # Sleep to avoid exceeding rate limits
-        if (i + 1) % 10 == 0:  # Add delay every 10 requests
-            time.sleep(10)  # Adjust based on your API limits
+        # Embed the batch of chunks and add to FAISS index
+        vector_store.add_texts(chunk_batch)
+        
+        # Add a delay to avoid exceeding the rate limit
+        time.sleep(60)  # Adjust delay based on API limits
     
     return vector_store
 
