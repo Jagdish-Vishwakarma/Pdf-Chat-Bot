@@ -71,10 +71,12 @@ def generate_chunks(text):
 def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
-    # Create FAISS index in memory
-    vector_store = FAISS.from_texts(chunks, embeddings)
+    # Throttle embedding requests to avoid exceeding rate limits
+    vector_store = []
+    for chunk in chunks:
+        vector_store.append(FAISS.from_texts([chunk], embeddings))
+        time.sleep(1)  # Adjust sleep time to manage rate limiting
     
-    # The FAISS index is now in memory, so no need to save it locally
     return vector_store
 
 
