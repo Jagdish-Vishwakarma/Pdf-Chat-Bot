@@ -18,7 +18,7 @@ PyPDF2==3.0.1  # PDF reader
 google-generativeai>=0.7.0,<0.8.0  # Update to meet langchain-google-genai requirements
 langchain-google-genai>=1.0.7,<2.0.0  # Allow flexibility within this version range
 streamlit==1.25.0
-pillow==9.5.0
+pillow==9.5.0 --only-binary=:all:
 faiss-cpu
 
 
