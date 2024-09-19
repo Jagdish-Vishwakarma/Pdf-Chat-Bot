@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import os
 import time
 import streamlit as st
@@ -17,90 +11,53 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGener
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 
-
-# In[2]:
-
-
-import os
-import streamlit as st
 import google.generativeai as genai
 
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chains import RetrievalQAWithSourcesChain
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chains.question_answering import load_qa_chain
-from langchain.prompts import PromptTemplate
-from PyPDF2 import PdfReader
-from dotenv import load_dotenv
-
-
-# In[5]:
-
-
+# Load environment variables
 load_dotenv()
-os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-
-# Extract all of the texts from the PDF files 
+# Extract all text from uploaded PDFs
 def get_pdf_text(pdfs):
-  text = ""
-  for pdf in pdfs:
-    pdf_reader = PdfReader(pdf)
+    text = ""
+    for pdf in pdfs:
+        pdf_reader = PdfReader(pdf)
 
-    # iterate through all the pages in the pdf
-    for page in pdf_reader.pages:
-      text += page.extract_text()
+        # Iterate through all the pages in the PDF
+        for page in pdf_reader.pages:
+            text += page.extract_text()
     
-    return text 
+    return text
 
-# Split text into chunks 
+# Split text into chunks
 def generate_chunks(text):
-  text_splitter = RecursiveCharacterTextSplitter(
-      chunk_size=1000,
-      chunk_overlap=1000
-  )
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000,
+        chunk_overlap=200  # Reduced overlap for efficiency
+    )
+    chunks = text_splitter.split_text(text)
+    return chunks
 
-  chunks = text_splitter.split_text(text)
-
-  return chunks 
-
-# Convert Chunks into Vectors
+# Convert chunks into vectors (FAISS index in-memory)
 def chunks_to_vectors(chunks):
     # Initialize the embeddings model
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
-    # Process chunks in batches to avoid exceeding rate limits
-    batch_size = 10  # Adjust this based on your API's rate limit
-    vector_store = None  # Declare this outside of the loop
-
-    for i in range(0, len(chunks), batch_size):
-        chunk_batch = chunks[i:i+batch_size]
-        
-        # Embed the batch of chunks and add them to the FAISS index
-        if vector_store is None:
-            vector_store = FAISS.from_texts(chunk_batch, embeddings)
-        else:
-            new_store = FAISS.from_texts(chunk_batch, embeddings)
-            vector_store.merge_from(new_store)
-        
-        # Add a delay to avoid exceeding the rate limit
-        time.sleep(60)  # Adjust the delay based on API limits
+    # Initialize an in-memory FAISS index
+    vector_store = FAISS.from_texts(chunks, embeddings)
     
     return vector_store
 
-
-
+# Get conversation chain
 def get_conversation():
     prompt_template = """
-    Answer the question that is asked with as much detail as you can, given the context that has been provided. If you unable to come up with an answer based on the provided context,
-    simply say "Answer cannot be provided based on the context that has been provided", instead of trying to forcibly provide an answer.
-    All the files uploaded are directly or indirectly related to Additive Manufacturing and 3d Printing industry and companies.\n\n
-    Context: \n {context}?\n
-    Question: \n {question}\n
+    Answer the question that is asked with as much detail as you can, given the context that has been provided. 
+    If you are unable to provide an answer based on the provided context, simply say 
+    'Answer cannot be provided based on the context that has been provided', instead of forcing an answer.
+    All the files uploaded are directly or indirectly related to Additive Manufacturing and 3D Printing industry and companies.
+    
+    Context: \n{context}\n
+    Question: \n{question}\n
     Answer:
     """
 
@@ -111,35 +68,35 @@ def get_conversation():
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
     return chain 
 
-def user_input(question):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-
-    new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
-    docs = new_db.similarity_search(question)
-
+# Handle user input
+def user_input(question, vector_store):
+    # Perform similarity search on the FAISS index
+    docs = vector_store.similarity_search(question)
+    
+    # Get the conversation chain
     chain = get_conversation()
 
+    # Get the response from the chain
     response = chain(
         {"input_documents": docs, "question": question}, return_only_outputs=True
     )
 
     st.write("Reply: ", response["output_text"])
 
-
-# Main app portion of the project
-# Main app portion of the project
+# Main app
 def app():
     st.title("ASTM Documents Chatbot")
     st.sidebar.title("Upload Documents")
 
-    # Sidebar
+    # Sidebar: Upload PDF documents
     pdf_docs = st.sidebar.file_uploader("Upload your documents in PDF format, then click on Chat Now.", accept_multiple_files=True)
 
     analyze_triggered = st.sidebar.button("Chat Now")
 
+    # This will store the FAISS index globally for the session
     if analyze_triggered:
         with st.spinner("Configuring... ⏳"):
-            # Get the extracted text from the PDF
+            # Get the extracted text from the PDFs
             raw_text = get_pdf_text(pdf_docs)
 
             # Check if the extracted text is None or empty
@@ -147,38 +104,21 @@ def app():
                 st.error("No text extracted from the PDF. Please check the file.")
                 return
 
-            # Proceed with chunking and embedding only if the text is valid
+            # Split text into chunks and create FAISS index
             chunks = generate_chunks(raw_text)
-            chunks_to_vectors(chunks)
-            st.success("Done")
+            vector_store = chunks_to_vectors(chunks)
+            st.session_state.vector_store = vector_store  # Store FAISS index in session state
+            st.success("Documents processed. You can now ask questions.")
 
     # User Input 
     user_question = st.text_input("Ask a question based on the documents that were uploaded")
 
     if user_question:
-        user_input(user_question)
+        if 'vector_store' in st.session_state:
+            # Use the vector store stored in the session state
+            user_input(user_question, st.session_state.vector_store)
+        else:
+            st.warning("Please upload and process the documents first.")
 
 if __name__ == "__main__":
     app()
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
